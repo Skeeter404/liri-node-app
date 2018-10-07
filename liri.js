@@ -8,12 +8,14 @@ var keys = require("./keys.js");
 
 var moment = require("moment");
 
+var fs = require("fs");
+
 var selector = process.argv[2];
 
 var query = process.argv.slice(3).join("+");
 
 //starting functioning for spotify data retrieval
-function spotifyThisSong(trackQuery) {
+function spotifyThis(trackQuery) {
 
   var Spotify = require('node-spotify-api');
 
@@ -45,7 +47,7 @@ function spotifyThisSong(trackQuery) {
 //functionality to hit bands in town api and post info to terminal
 function concertThis(artistQuery) {
 
-  if(artistQuery === undefined){
+  if (artistQuery === undefined) {
     artistQuery = "Chris Stapleton";
   }
 
@@ -65,7 +67,7 @@ function concertThis(artistQuery) {
 
 //functionality for omdb request
 function movieThis(movieQuery) {
-  
+
   if (movieQuery === undefined) {
     movieQuery = "batman the dark knight";
   }
@@ -73,29 +75,60 @@ function movieThis(movieQuery) {
   var movieURL = "http://www.omdbapi.com/?t=" + movieQuery + "&plot=short&apikey=trilogy";
 
   request(movieURL, function (error, response, body) {
-    
-      var movieData = JSON.parse(body);
 
-      var rottenRating = "";
+    var movieData = JSON.parse(body);
 
-        if(movieData.Ratings[1]){
-          rottenRating = movieData.Ratings[1].Value;
-        } else {
-          rottenRating = "N/A";
-        }
+    var rottenRating = "";
 
-      var movieShow = [
-        "Title: " + movieData.Title,
-        "Release Year: " + movieData.Year,
-        "IMDB Rating: " + movieData.imdbRating,
-        "Rotten Tomatoes Rating: " + rottenRating,
-        "Produced in: " + movieData.Country,
-        "Language: " + movieData.Language,
-        "Plot: " + movieData.Plot,
-        "Actors: " + movieData.Actors
-      ].join("\n");
-      console.log(movieShow);
+    if (movieData.Ratings[1]) {
+      rottenRating = movieData.Ratings[1].Value;
+    } else {
+      rottenRating = "N/A";
+    }
+
+    var movieShow = [
+      "Title: " + movieData.Title,
+      "Release Year: " + movieData.Year,
+      "IMDB Rating: " + movieData.imdbRating,
+      "Rotten Tomatoes Rating: " + rottenRating,
+      "Produced in: " + movieData.Country,
+      "Language: " + movieData.Language,
+      "Plot: " + movieData.Plot,
+      "Actors: " + movieData.Actors
+    ].join("\n");
+    console.log(movieShow);
   });
 };
 
-movieThis();
+//funcion for do-what-it-says
+function doIt() {
+
+  fs.readFile("random.txt", "utf8", function(error, data) {
+    var dataArr = data.split(",");
+
+    selector = dataArr[0];
+
+    query = dataArr[1];
+
+    spotifyThis(query);
+  });
+};
+
+//switch method to call functions based on selector from user input
+switch(selector){
+  case "spotify-this-song":
+  spotifyThis(query);
+  break;
+
+  case "concert-this":
+  concertThis(query);
+  break;
+
+  case "movie-this":
+  movieThis(query);
+  break;
+
+  case "do-what-it-says":
+  doIt();
+  break;
+};
